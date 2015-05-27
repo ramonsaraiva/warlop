@@ -11,6 +11,7 @@ public class Entity : MonoBehaviour
 
 	private int networkIdentity;
 	private int identity;
+	private string nickname;
 
 	public int NetworkIdentity
 	{
@@ -22,6 +23,12 @@ public class Entity : MonoBehaviour
 	{
 		get { return identity; }
 		set { identity = value; }
+	}
+
+	public string Nickname
+	{
+		get { return nickname; }
+		set { nickname = value; }
 	}
 
 	protected virtual void Awake()

@@ -7,7 +7,8 @@ using System.Linq;
 #region Packets
 public enum PacketTypes : short
 {
-    LostConnection = MsgType.Highest + 1,
+	NewConnection = MsgType.Highest + 1,
+    LostConnection,
     PlayersHandshake,
     PlayerConnected,
 	PlayerDisconnected,
@@ -25,15 +26,20 @@ public class HandshakePacket : MessageBase
     public int networkIdentity;
     public int players;
     public int[] playersIdentities;
+	public string[] playersNicknames;
 
     public override void Deserialize(NetworkReader reader)
     {
         networkIdentity = reader.ReadInt32();
         players = reader.ReadInt32();
         playersIdentities = new int[players];
+		playersNicknames = new string[players];
 
-        for (int i = 0; i < players; i++)
-            playersIdentities[i] = reader.ReadInt32();
+		for (int i = 0; i < players; i++)
+		{
+			playersIdentities[i] = reader.ReadInt32();
+			playersNicknames[i] = reader.ReadString();
+		}
     }
 
     public override void Serialize(NetworkWriter writer)
@@ -41,8 +47,11 @@ public class HandshakePacket : MessageBase
         writer.Write(networkIdentity);
         writer.Write(players);
 
-        for (int i = 0; i < players; i++)
-            writer.Write(playersIdentities[i]);
+		for (int i = 0; i < players; i++)
+		{
+			writer.Write(playersIdentities[i]);
+			writer.Write(playersNicknames[i]);
+		}
     }
 }
 
@@ -119,6 +128,52 @@ public class RelationPacket : MessageBase
 	}
 
 	public RelationPacket() { }
+}
+
+public class StringPacket : MessageBase
+{
+	public string value;
+
+	public override void Deserialize(NetworkReader reader)
+	{
+		value = reader.ReadString();
+	}
+
+	public override void Serialize(NetworkWriter writer)
+	{
+		writer.Write(value);
+	}
+
+	public StringPacket(string value)
+	{
+		this.value = value;
+	}
+
+	public StringPacket() { }
+}
+
+public class IdentifiedStringPacket : IdentifiedPacket
+{
+	public string value;
+
+	public override void Deserialize(NetworkReader reader)
+	{
+		base.Deserialize(reader);
+		value = reader.ReadString();
+	}
+
+	public override void Serialize(NetworkWriter writer)
+	{
+		base.Serialize(writer);
+		writer.Write(value);
+	}
+
+	public IdentifiedStringPacket(int networkIdentity, string value) : base(networkIdentity)
+	{
+		this.value = value;
+	}
+
+	public IdentifiedStringPacket() { }
 }
 
 public class Vector3Packet : MessageBase
@@ -294,7 +349,8 @@ public class ServerManager
 {
     public static bool IsServer;
 
-    public static void Open (int port)
+	/* TODO: move the nickname to somewhere else */
+    public static void Open (int port, string nickname)
     {
         NetworkServer.Listen(port);
         RegisterHandlers();
@@ -302,7 +358,7 @@ public class ServerManager
 
         Debug.Log("[SERVER] Opened on port " + port);
 
-        ClientManager.Connect("127.0.0.1", port);
+        ClientManager.Connect("127.0.0.1", port, nickname);
     }
 
     public static void StartGame()
@@ -330,12 +386,12 @@ public class ServerManager
 
 	public static void PlayerShot(Survivor from, Survivor to)
 	{
-		NetworkServer.SendByChannelToAll((short)PacketTypes.PlayerDamage, new PlayerDamagePacket(from.NetworkIdentity, to.NetworkIdentity, 10), Channels.DefaultReliable);
+		NetworkServer.SendByChannelToAll((short)PacketTypes.PlayerDamage, new PlayerDamagePacket(from.NetworkIdentity, to.NetworkIdentity, 33.4f), Channels.DefaultReliable);
 	}
 
     private static void RegisterHandlers()
     {
-        NetworkServer.RegisterHandler((short) MsgType.Connect, NewConnection);
+        NetworkServer.RegisterHandler((short) PacketTypes.NewConnection, NewConnection);
         NetworkServer.RegisterHandler((short) PacketTypes.LostConnection, LostConnection);
         NetworkServer.RegisterHandler((short) PacketTypes.PlayerInput, PlayerInput);
         NetworkServer.RegisterHandler((short) PacketTypes.PlayerPosition, PlayerPosition);
@@ -345,16 +401,22 @@ public class ServerManager
 
     private static void NewConnection(NetworkMessage netMsg)
     {
+		string nickname = netMsg.ReadMessage<StringMessage>().value;
+
         HandshakePacket p = new HandshakePacket();
         p.networkIdentity = netMsg.conn.connectionId;
         p.players = ClientManager.ClientList.Count;
         p.playersIdentities = new int[ClientManager.ClientList.Count];
+		p.playersNicknames = new string[ClientManager.ClientList.Count];
 
-        for (int i = 0; i < ClientManager.ClientList.Count; i++)
-            p.playersIdentities[i] = ClientManager.ClientList.ElementAt(i).Value.NetworkIdentity;
+		for (int i = 0; i < ClientManager.ClientList.Count; i++)
+		{
+			p.playersIdentities[i] = ClientManager.ClientList.ElementAt(i).Value.NetworkIdentity;
+			p.playersNicknames[i] = ClientManager.ClientList.ElementAt(i).Value.Nickname;
+		}
 
         NetworkServer.SendToClient(netMsg.conn.connectionId, (short) PacketTypes.PlayersHandshake, p);
-        NetworkServer.SendByChannelToAll((short) PacketTypes.PlayerConnected, new IntegerMessage(netMsg.conn.connectionId), Channels.DefaultReliable);
+        NetworkServer.SendByChannelToAll((short) PacketTypes.PlayerConnected, new IdentifiedStringPacket(netMsg.conn.connectionId, nickname), Channels.DefaultReliable);
     }
 
     private static void LostConnection(NetworkMessage netMsg)

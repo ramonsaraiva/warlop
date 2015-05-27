@@ -21,6 +21,11 @@ public class MenuSceneBehaviour : MonoBehaviour
 	[SerializeField]
 	private Text lobbyText;
 
+	[SerializeField]
+	private AudioSource backgroundSource;
+	[SerializeField]
+	private AudioSource buttonClickSource;
+
 	private bool createdOrJoined;
 
 	void Awake()
@@ -48,7 +53,9 @@ public class MenuSceneBehaviour : MonoBehaviour
 
 	public void CreateServer()
 	{
-		ServerManager.Open(int.Parse(portInput.text));
+		buttonClickSource.Play();
+
+		ServerManager.Open(int.Parse(portInput.text), nicknameInput.text);
 		joinServer.interactable = false;
 		DisableUI();
 		lobbyText.enabled = true;
@@ -56,13 +63,17 @@ public class MenuSceneBehaviour : MonoBehaviour
 
 	public void JoinServer()
 	{
-		ClientManager.Connect(ipInput.text, int.Parse(portInput.text));
+		buttonClickSource.Play();
+
+		ClientManager.Connect(ipInput.text, int.Parse(portInput.text), nicknameInput.text);
 		DisableUI();
 		lobbyText.enabled = true;
 	}
 
 	public void StartGame()
 	{
+		buttonClickSource.Play();
+
 		ServerManager.StartGame();
 	}
 

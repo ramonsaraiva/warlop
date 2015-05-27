@@ -9,6 +9,7 @@ public class ClientInfo
     private int networkIdentity;
     private Entity entity;
 	private bool[] lastActions;
+	private string nickname;
 	private Vector3 startPosition;
 
 	public ClientInfo()
@@ -33,6 +34,12 @@ public class ClientInfo
 		get { return lastActions; }
 	}
 
+	public string Nickname
+	{
+		get { return nickname; }
+		set { nickname = value; }
+	}
+
 	public Vector3 StartPosition
 	{
 		get { return startPosition; }
@@ -44,6 +51,7 @@ public class ClientManager
 {
     private static NetworkClient client;
     private static int networkIdentity;
+	private static string nickname;
 
     private static Dictionary<int, ClientInfo> clientList;
     private static ClientInfo localClient;
@@ -53,7 +61,7 @@ public class ClientManager
         get { return clientList; }
     }
 
-    public static void Connect(string address, int port)
+    public static void Connect(string address, int port, string nickname)
     {
         clientList = new Dictionary<int, ClientInfo>();
 
@@ -65,6 +73,7 @@ public class ClientManager
 		else
 		*/
 		client.Connect(address, port);
+		ClientManager.nickname = nickname;
 	}
 
 	public static void InstantiatePlayers()
@@ -76,6 +85,7 @@ public class ClientManager
 			GameObject playerObject = GameObject.Instantiate(DataManager.DataConstants.PlayerPrefab, client.Value.StartPosition, Quaternion.identity) as GameObject;
 			client.Value.Entity = playerObject.GetComponent<Entity>();
 			client.Value.Entity.NetworkIdentity = client.Key;
+			client.Value.Entity.Nickname = client.Value.Nickname;
 
 			if (client.Key == networkIdentity)
 				playerObject.AddComponent<PlayerBehaviour>();
@@ -119,6 +129,7 @@ public class ClientManager
     private static void NewConnection(NetworkMessage netMsg)
     {
         Debug.Log("[CLIENT] Connected to sever");
+		client.Send((short)PacketTypes.NewConnection, new StringPacket(nickname));
     }
 
     private static void PlayersHandshake(NetworkMessage netMsg)
@@ -130,6 +141,7 @@ public class ClientManager
         {
             ClientInfo clientInfo = new ClientInfo();
             clientInfo.NetworkIdentity = p.playersIdentities[i];
+			clientInfo.Nickname = p.playersNicknames[i];
             clientList.Add(clientInfo.NetworkIdentity, clientInfo);
         }
     }
@@ -137,10 +149,12 @@ public class ClientManager
     private static void PlayerConnected(NetworkMessage netMsg)
     {
         ClientInfo clientInfo = new ClientInfo();
-        clientInfo.NetworkIdentity = netMsg.ReadMessage<IntegerMessage>().value;
+		IdentifiedStringPacket p = netMsg.ReadMessage<IdentifiedStringPacket>();
+		clientInfo.NetworkIdentity = p.networkIdentity;
+		clientInfo.Nickname = p.value;
 
-        if (clientInfo.NetworkIdentity == networkIdentity)
-            localClient = clientInfo;
+		if (clientInfo.NetworkIdentity == networkIdentity)
+			localClient = clientInfo;
 
         clientList.Add(clientInfo.NetworkIdentity, clientInfo);
     }
@@ -218,14 +232,7 @@ public class ClientManager
 		Survivor from = (Survivor) clientList[p.fromNetworkIdentity].Entity;
 		Survivor to = (Survivor) clientList[p.toNetworkIdentity].Entity;
 
-		if (to.Hp <= p.damage)
-		{
-			from.Score = from.Score + 1;
-			to.Score = to.Score - 1;
-			to.Hp = 100;
-			return;
-		}
-
-		to.Hp = to.Hp - p.damage;
+		if (to.GotHit(p.damage))
+			from.Score += 1;
 	}
 }
