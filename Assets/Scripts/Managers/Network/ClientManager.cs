@@ -209,11 +209,6 @@ public class ClientManager
 	{
 		IdentifiedShortPacket p = netMsg.ReadMessage<IdentifiedShortPacket>();
 
-		/*
-		if (p.networkIdentity == networkIdentity)
-			return;
-		*/
-
 		for (int i = 0; i < DataManager.DataConstants.Actions.Length; i++)
 		{
 			bool action = (p.value & (1 << i)) > 0 ? true : false;
@@ -233,6 +228,9 @@ public class ClientManager
 		Survivor to = (Survivor) clientList[p.toNetworkIdentity].Entity;
 
 		if (to.GotHit(p.damage))
+		{
 			from.Score += 1;
+			EventManager.AddInfoEvent(from.Nickname + " killed " + to.Nickname);
+		}
 	}
 }

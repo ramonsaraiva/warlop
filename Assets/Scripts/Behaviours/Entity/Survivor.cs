@@ -6,6 +6,8 @@ public class Survivor : Living
 {
 	#region UnityFields
 	[SerializeField]
+	private Animator animator;
+	[SerializeField]
 	private GameObject arrowPrefab;
 	[SerializeField]
 	private Canvas canvas;
@@ -70,6 +72,11 @@ public class Survivor : Living
 		healthBar.fillAmount = hp / 100f;
 		scoreText.text = score.ToString();
 		nicknameText.text = Nickname;
+
+		if (MovementDirection.x != 0 || MovementDirection.y != 0)
+			animator.SetBool("Moving", true);
+		else
+			animator.SetBool("Moving", false);
 	}
 	#endregion UnityMethods
 
