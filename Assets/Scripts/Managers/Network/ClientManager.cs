@@ -88,7 +88,10 @@ public class ClientManager
 			client.Value.Entity.Nickname = client.Value.Nickname;
 
 			if (client.Key == networkIdentity)
+			{
+				playerObject.name = "Me";
 				playerObject.AddComponent<PlayerBehaviour>();
+			}
 		}
 	}
 

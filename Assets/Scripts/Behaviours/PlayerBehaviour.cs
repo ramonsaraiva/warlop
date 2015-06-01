@@ -1,11 +1,11 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 
 public class PlayerBehaviour : MonoBehaviour
 {
 	private Survivor entity;
 	private Rigidbody2D rigidbody;
-
 
 	private Vector3 lastDirection;
 	private Vector3 direction;
@@ -18,6 +18,8 @@ public class PlayerBehaviour : MonoBehaviour
 	private bool actionChanged;
 	private short inputs;
 
+	private GameSceneBehaviour gameScene;
+
     void Awake()
     {
 		entity = GetComponent<Survivor>();
@@ -27,12 +29,14 @@ public class PlayerBehaviour : MonoBehaviour
 
 		Camera2DFollow cameraFollow = Camera.main.gameObject.AddComponent<Camera2DFollow>();
 		cameraFollow.target = transform;
+
+		gameScene = GameObject.Find("SceneManager").GetComponent<GameSceneBehaviour>();
     }
 
     void Update()
     {
 		direction = new Vector3(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"), 0);
-		entity.UpdateDirection(direction);
+		entity.UpdateDirection(direction.normalized);
 
 		mouseWorldPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 		entity.UpdateRotation(Mathf.Atan2(transform.position.y - mouseWorldPosition.y, transform.position.x - mouseWorldPosition.x) * Mathf.Rad2Deg, 90f);
@@ -74,5 +78,7 @@ public class PlayerBehaviour : MonoBehaviour
 
 		if (actionChanged)
 			ClientManager.SendActions(inputs);
+
+		gameScene.SetStrength(entity.ArrowStrength);
     }
 }

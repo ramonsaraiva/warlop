@@ -6,6 +6,8 @@ public class GameSceneBehaviour : MonoBehaviour
 {
 	[SerializeField]
 	private Text infoText;
+	[SerializeField]
+	private Image strengthBar;
 
 	private void Update()
 	{
@@ -29,5 +31,10 @@ public class GameSceneBehaviour : MonoBehaviour
 	public void OnLevelWasLoaded(int level)
 	{
 		ClientManager.InstantiatePlayers();
+	}
+
+	public void SetStrength(float strength)
+	{
+		strengthBar.fillAmount = strength / 10f;
 	}
 }

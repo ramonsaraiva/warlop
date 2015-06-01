@@ -9,17 +9,13 @@ public class Living : Entity
 	private NetworkCorrectionBehaviour networkCorrection;
 
     private Vector3 movementDirection;
+	private float speed;
 	private float angle;
 
 	public Rigidbody2D Rigidbody
 	{
 		get { return rigidbody; }
 		set { rigidbody = value; }
-	}
-
-	public float Angle
-	{
-		get { return angle; }
 	}
 
 	public NetworkCorrectionBehaviour NetworkCorrection
@@ -32,6 +28,17 @@ public class Living : Entity
         get { return movementDirection; }
         set { movementDirection = value; }
     }
+
+	public float Speed
+	{
+		get { return speed; }
+		set { speed = value; }
+	}
+
+	public float Angle
+	{
+		get { return angle; }
+	}
 
 	public void UpdateDirection(Vector3 direction)
 	{
@@ -48,6 +55,6 @@ public class Living : Entity
 
 	private void FixedUpdate()
 	{
-		rigidbody.velocity = movementDirection * DataManager.DataConstants.speed;
+		rigidbody.velocity = movementDirection * speed;
 	}
 }

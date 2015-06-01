@@ -28,6 +28,9 @@ public class Survivor : Living
 
 	private float lastShot;
 	private float shotRate = 3f;
+	private float shotStartTime;
+	private float arrowStrength;
+	private bool shooting;
 
 	#region Properties
 	public Vector3 LookingDirection
@@ -56,12 +59,18 @@ public class Survivor : Living
 		get { return score; }
 		set { score = value; }
 	}
+
+	public float ArrowStrength
+	{
+		get { return arrowStrength; }
+	}
 	#endregion Properties
 
 	#region UnityMethods
 	protected override void Awake()
 	{
 		base.Awake();
+		Speed = DataManager.DataConstants.speed;
 		hp = 100f;
 		lastShot = Time.time - shotRate;
 	}
@@ -77,6 +86,19 @@ public class Survivor : Living
 			animator.SetBool("Moving", true);
 		else
 			animator.SetBool("Moving", false);
+
+		if (Time.time > lastShot + shotRate && shooting)
+		{
+			float deltaShotTime = Time.time - shotStartTime;
+			if (deltaShotTime > 2f)
+				deltaShotTime = 2f;
+			float multiplier = deltaShotTime / 2f;
+			arrowStrength = 10 * multiplier;
+		}
+		else
+		{
+			arrowStrength = 0;
+		}
 	}
 	#endregion UnityMethods
 
@@ -86,7 +108,18 @@ public class Survivor : Living
 		{
 			case InputActions.Shoot:
 				if (value)
+				{
+					if (Time.time > lastShot + shotRate)
+					{
+						shotStartTime = Time.time;
+						Speed = DataManager.DataConstants.shootingSpeed;
+						shooting = true;
+					}
+				}
+				else
+				{
 					Shoot();
+				}
 				break;
 			case InputActions.Sprint:
 				//sprint
@@ -96,12 +129,17 @@ public class Survivor : Living
 
 	private void Shoot()
 	{
-		if (Time.time > lastShot + shotRate)
+		bool outOfCooldown = Time.time > lastShot + shotRate;
+
+		if (outOfCooldown)
 		{
 			lastShot = Time.time;
 			GameObject arrow = Instantiate(arrowPrefab, transform.position, transform.rotation) as GameObject;
-			arrow.GetComponent<Rigidbody2D>().velocity = LookingDirection * 13f;
+			arrow.GetComponent<Rigidbody2D>().velocity = LookingDirection * (DataManager.DataConstants.arrowBaseForce + arrowStrength);
 			arrow.GetComponent<ArrowTrigger>().entity = this;
+
+			Speed = DataManager.DataConstants.speed;
+			shooting = false;
 		}
 	}
 
