@@ -32,9 +32,4 @@ public class GameSceneBehaviour : MonoBehaviour
 	{
 		ClientManager.InstantiatePlayers();
 	}
-
-	public void SetStrength(float strength)
-	{
-		strengthBar.fillAmount = strength / 10f;
-	}
 }

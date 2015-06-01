@@ -18,7 +18,7 @@ public class PlayerBehaviour : MonoBehaviour
 	private bool actionChanged;
 	private short inputs;
 
-	private GameSceneBehaviour gameScene;
+	bool test;
 
     void Awake()
     {
@@ -29,8 +29,7 @@ public class PlayerBehaviour : MonoBehaviour
 
 		Camera2DFollow cameraFollow = Camera.main.gameObject.AddComponent<Camera2DFollow>();
 		cameraFollow.target = transform;
-
-		gameScene = GameObject.Find("SceneManager").GetComponent<GameSceneBehaviour>();
+		//cameraFollow.damping = 0.2f;
     }
 
     void Update()
@@ -79,6 +78,18 @@ public class PlayerBehaviour : MonoBehaviour
 		if (actionChanged)
 			ClientManager.SendActions(inputs);
 
-		gameScene.SetStrength(entity.ArrowStrength);
+		if (Input.GetButtonDown("Action1"))
+		{
+			test = true;
+		}
     }
+
+	void FixedUpdate()
+	{
+		if (test)
+		{
+			test = false;
+			entity.Rigidbody.AddRelativeForce(Vector3.up * 5f, ForceMode2D.Impulse);
+		}
+	}
 }

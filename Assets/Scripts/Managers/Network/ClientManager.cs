@@ -230,7 +230,7 @@ public class ClientManager
 		Survivor from = (Survivor) clientList[p.fromNetworkIdentity].Entity;
 		Survivor to = (Survivor) clientList[p.toNetworkIdentity].Entity;
 
-		if (to.GotHit(p.damage))
+		if (to.GotHit(p.damage, p.force))
 		{
 			from.Score += 1;
 			EventManager.AddInfoEvent(from.Nickname + " killed " + to.Nickname);

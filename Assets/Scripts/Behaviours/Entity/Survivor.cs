@@ -32,6 +32,9 @@ public class Survivor : Living
 	private float arrowStrength;
 	private bool shooting;
 
+	bool forced;
+	Vector3 force;
+
 	#region Properties
 	public Vector3 LookingDirection
 	{
@@ -100,6 +103,17 @@ public class Survivor : Living
 			arrowStrength = 0;
 		}
 	}
+
+	protected override void FixedUpdate()
+	{
+		base.FixedUpdate();
+
+		if (forced)
+		{
+			Rigidbody.AddForce(force, ForceMode2D.Impulse);
+			forced = false;
+		}
+	}
 	#endregion UnityMethods
 
 	public override void SetAction(InputActions action, bool value)
@@ -112,7 +126,6 @@ public class Survivor : Living
 					if (Time.time > lastShot + shotRate)
 					{
 						shotStartTime = Time.time;
-						Speed = DataManager.DataConstants.shootingSpeed;
 						shooting = true;
 					}
 				}
@@ -135,17 +148,22 @@ public class Survivor : Living
 		{
 			lastShot = Time.time;
 			GameObject arrow = Instantiate(arrowPrefab, transform.position, transform.rotation) as GameObject;
-			arrow.GetComponent<Rigidbody2D>().velocity = LookingDirection * (DataManager.DataConstants.arrowBaseForce + arrowStrength);
-			arrow.GetComponent<ArrowTrigger>().entity = this;
+			arrow.GetComponent<Rigidbody2D>().velocity = LookingDirection * DataManager.DataConstants.arrowBaseForce;
+			arrow.GetComponent<Rigidbody2D>().AddTorque(200f);
+			arrow.GetComponent<FireballTrigger>().entity = this;
 
-			Speed = DataManager.DataConstants.speed;
 			shooting = false;
 		}
 	}
 
-	public bool GotHit(float damage)
+	public bool GotHit(float damage, Vector3 force)
 	{
 		hurtSource.Play();
+
+		Debug.Log(force);
+		forced = true;
+		this.force = force;
+		Rigidbody.AddForce(force, ForceMode2D.Impulse);
 		
 		if (damage > hp)
 		{

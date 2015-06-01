@@ -321,24 +321,28 @@ public class IdentifiedPlayerRotationPacket : PlayerRotationPacket
 public class PlayerDamagePacket : RelationPacket
 {
 	public float damage;
+	public Vector3 force;
 
 	public override void Deserialize(NetworkReader reader)
 	{
 		base.Deserialize(reader);
 		damage = reader.ReadSingle();
+		force = reader.ReadVector3();
 	}
 
 	public override void Serialize(NetworkWriter writer)
 	{
 		base.Serialize(writer);
 		writer.Write(damage);
+		writer.Write(force);
 	}
 
-	public PlayerDamagePacket(int fromNetworkIdentity, int toNetworkIdentity, float damage) : base(fromNetworkIdentity, toNetworkIdentity)
+	public PlayerDamagePacket(int fromNetworkIdentity, int toNetworkIdentity, float damage, Vector3 force) : base(fromNetworkIdentity, toNetworkIdentity)
 	{
 		this.fromNetworkIdentity = fromNetworkIdentity;
 		this.toNetworkIdentity = toNetworkIdentity;
 		this.damage = damage;
+		this.force = force;
 	}
 
 	public PlayerDamagePacket() { }
@@ -384,9 +388,9 @@ public class ServerManager
 		NetworkServer.SendByChannelToAll((short)PacketTypes.EndGame, new EmptyMessage(), Channels.DefaultReliable);
 	}
 
-	public static void PlayerShot(Survivor from, Survivor to)
+	public static void ApplyDamage(Survivor from, Survivor to, float damage, Vector3 force)
 	{
-		NetworkServer.SendByChannelToAll((short)PacketTypes.PlayerDamage, new PlayerDamagePacket(from.NetworkIdentity, to.NetworkIdentity, 33.4f), Channels.DefaultReliable);
+		NetworkServer.SendByChannelToAll((short)PacketTypes.PlayerDamage, new PlayerDamagePacket(from.NetworkIdentity, to.NetworkIdentity, damage, force), Channels.DefaultReliable);
 	}
 
     private static void RegisterHandlers()

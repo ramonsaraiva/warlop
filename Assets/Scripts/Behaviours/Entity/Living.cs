@@ -9,6 +9,7 @@ public class Living : Entity
 	private NetworkCorrectionBehaviour networkCorrection;
 
     private Vector3 movementDirection;
+	private Vector3 lastMovementDirection;
 	private float speed;
 	private float angle;
 
@@ -53,7 +54,7 @@ public class Living : Entity
 
 	public virtual void SetAction(InputActions action, bool value) {}
 
-	private void FixedUpdate()
+	protected virtual void FixedUpdate()
 	{
 		rigidbody.velocity = movementDirection * speed;
 	}

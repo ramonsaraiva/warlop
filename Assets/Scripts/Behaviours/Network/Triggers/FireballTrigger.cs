@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class ArrowTrigger : NetworkTrigger
+public class FireballTrigger : NetworkTrigger
 {
 	public Survivor entity { get; set; }
 	private Survivor otherEntity;
@@ -25,6 +25,6 @@ public class ArrowTrigger : NetworkTrigger
 
 	protected override void ServerAction()
 	{
-		ServerManager.PlayerShot(entity, otherEntity);
+		ServerManager.ApplyDamage(entity, otherEntity, 10f, (otherEntity.transform.position - transform.position).normalized * 10f);
 	}
 }
