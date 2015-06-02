@@ -372,14 +372,11 @@ public class DamageWithForcePacket : DamagePacket
 
 public class ServerManager
 {
-    public static bool IsServer;
-
 	/* TODO: move the nickname to somewhere else */
     public static void Open (int port, string nickname)
     {
         NetworkServer.Listen(port);
         RegisterHandlers();
-        IsServer = true;
 
         Debug.Log("[SERVER] Opened on port " + port);
 
@@ -388,8 +385,8 @@ public class ServerManager
 
     public static void StartGame()
     {
-        if (!IsServer)
-            return;
+		if (!NetworkServer.active)
+			return;
 
         InitPacket p = new InitPacket();
         p.identities = new int[ClientManager.ClientList.Count];
@@ -407,6 +404,11 @@ public class ServerManager
 	public static void EndGame()
 	{
 		NetworkServer.SendByChannelToAll((short)PacketTypes.EndGame, new EmptyMessage(), Channels.DefaultReliable);
+	}
+	
+	public static bool IsServer()
+	{
+		return NetworkServer.active;
 	}
 
 	public static void ApplyDamage(Survivor from, Survivor to, float damage)

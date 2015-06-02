@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
+using Warlop.Constants;
 
 public class Survivor : Living
 {
@@ -8,7 +8,7 @@ public class Survivor : Living
 	[SerializeField]
 	private Animator animator;
 	[SerializeField]
-	private GameObject arrowPrefab;
+	private GameObject fireballPrefab;
 	[SerializeField]
 	private Canvas canvas;
 	[SerializeField]
@@ -29,19 +29,19 @@ public class Survivor : Living
 
 	private bool safe;
 	private float unsafeCounter;
-	private float unsafeRate = 1f;
-	private float unsafeDamage = 10f;
 
 	private float lastShot;
-	private float shotRate = 3f;
-	float cooldown;
-	bool shootFireball;
+	private float cooldown;
+	private bool shootFireball;
 
-	bool applyForce;
-	Vector3 force;
-	float stopFlyingTime;
-	float flyTime = 2f;
+	private bool applyForce;
+	private Vector3 force;
+	private float stopFlyingTime;
 
+	private float stopChannelingTime;
+
+	private float lastExplosion;
+	private bool makeExplosion;
 
 	#region Properties
 	public Vector3 LookingDirection
@@ -89,15 +89,18 @@ public class Survivor : Living
 	{
 		base.Awake();
 
-		Speed = DataManager.DataConstants.speed;
-		hp = 100f;
-		lastShot = Time.time - shotRate;
+		Speed = WizardConstants.StartingSpeed;
+		hp = WizardConstants.StartingHealth;
+		lastShot = Time.time - SpellConstants.FireballRate;
+		lastExplosion = Time.time - SpellConstants.ExplosionRate;
 		lastDamager = this;
 		safe = true;
 	}
 
-	public void Update()
+	protected override void Update()
 	{
+		base.Update();
+
 		canvas.transform.rotation = Quaternion.identity;
 		healthBar.fillAmount = hp / 100f;
 		scoreText.text = score.ToString();
@@ -116,10 +119,16 @@ public class Survivor : Living
 		else
 			cooldown = 3f;
 
-		if (!safe && Time.time > unsafeCounter + unsafeRate)
+		if (!safe && Time.time > unsafeCounter + EnvironmentConstants.UnsafeAreaRate)
 		{
-			ServerManager.ApplyDamage(lastDamager, this, unsafeDamage);
-			unsafeCounter += unsafeRate;
+			ServerManager.ApplyDamage(lastDamager, this, EnvironmentConstants.UnsafeAreaDPR);
+			unsafeCounter += EnvironmentConstants.UnsafeAreaRate;
+		}
+
+		if (Channeling && Time.time > stopChannelingTime)
+		{
+			Channeling = false;
+			makeExplosion = true;
 		}
 	}
 
@@ -136,12 +145,34 @@ public class Survivor : Living
 		if (shootFireball)
 		{
 			shootFireball = false;
-
 			lastShot = Time.time;
-			GameObject arrow = Instantiate(arrowPrefab, transform.position, transform.rotation) as GameObject;
-			arrow.GetComponent<Rigidbody2D>().velocity = LookingDirection * DataManager.DataConstants.arrowBaseForce;
-			arrow.GetComponent<Rigidbody2D>().AddTorque(200f);
-			arrow.GetComponent<FireballTrigger>().entity = this;
+
+			GameObject fireball = Instantiate(fireballPrefab, transform.position, transform.rotation) as GameObject;
+			fireball.GetComponent<Rigidbody2D>().velocity = LookingDirection * SpellConstants.FireballSpeed;
+			fireball.GetComponent<Rigidbody2D>().AddTorque(400f);
+			fireball.GetComponent<FireballTrigger>().entity = this;
+		}
+
+		if (makeExplosion)
+		{
+			makeExplosion = false;
+			lastExplosion = Time.time;
+
+			Rigidbody.velocity = Vector3.zero;
+
+			if (ServerManager.IsServer())
+			{
+				Collider2D[] hit = Physics2D.OverlapCircleAll(transform.position, SpellConstants.ExplosionRadius, 1 << LayerMask.NameToLayer("Player"));
+				foreach (Collider2D coll in hit)
+				{
+					if (coll.gameObject == gameObject)
+						continue;
+
+					float explosionDistance = Vector3.Distance(transform.position, coll.transform.position);
+					Vector3 explosionForce = (coll.transform.position - transform.position).normalized * SpellConstants.ExplosionForce * (2 - explosionDistance);
+					ServerManager.ApplyDamageWithForce(this, coll.GetComponent<Survivor>(), SpellConstants.ExplosionDamage, explosionForce);
+				}
+			}
 		}
 	}
 	#endregion UnityMethods
@@ -150,23 +181,37 @@ public class Survivor : Living
 	{
 		switch (action)
 		{
-			case InputActions.Shoot:
+			case InputActions.Fireball:
 				if (!value)
 					Shoot();
 				break;
-			case InputActions.Sprint:
-				//sprint
+			case InputActions.Explosion:
+				if (!value)
+					Explosion();
 				break;
 		}
 	}
 
 	private void Shoot()
 	{
-		bool outOfCooldown = Time.time > lastShot + shotRate;
+		bool outOfCooldown = Time.time > lastShot + SpellConstants.FireballRate;
 
 		if (outOfCooldown)
 			shootFireball = true;
 	}
+
+	private void Explosion()
+	{
+		bool outOfCooldown = Time.time > lastExplosion + SpellConstants.ExplosionRate;
+
+		if (!outOfCooldown)
+			return;
+
+		Channeling = true;
+		stopChannelingTime = Time.time + SpellConstants.ExplosionChannelingTime;
+		animator.SetTrigger("Explosion");
+	}
+
 
 	public bool ReceivedDamage(float damage)
 	{
@@ -208,8 +253,13 @@ public class Survivor : Living
 	{
 		applyForce = true;
 		this.force = force;
+		Fly();
+	}
+
+	private void Fly()
+	{
 		Flying = true;
-		stopFlyingTime = Time.time + flyTime;
+		stopFlyingTime = Time.time + WizardConstants.FlyTime;
 	}
 
 	private void Die()

@@ -14,6 +14,7 @@ public class Living : Entity
 	private float speed;
 	private float angle;
 	private bool flying;
+	private bool channeling;
 
 	#region Properties
 	public Rigidbody2D Rigidbody
@@ -50,6 +51,12 @@ public class Living : Entity
 		get { return flying; }
 		set { flying = value; }
 	}
+
+	public bool Channeling
+	{
+		get { return channeling; }
+		set { channeling = value; }
+	}
 	#endregion Properties
 
 	public void UpdateDirection(Vector3 direction)
@@ -65,8 +72,15 @@ public class Living : Entity
 
 	public virtual void SetAction(InputActions action, bool value) {}
 
+	protected virtual void Update()
+	{
+	}
+
 	protected virtual void FixedUpdate()
 	{
+		if (channeling)
+			return;
+
 		if (flying)
 			rigidbody.AddForce(movementDirection * speed, ForceMode2D.Force);
 		else

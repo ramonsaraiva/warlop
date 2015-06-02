@@ -5,8 +5,8 @@ public class Entity : MonoBehaviour
 {
 	public enum InputActions
 	{
-		Shoot = 0,
-		Sprint = 1,
+		Fireball = 0,
+		Explosion = 1,
 	}
 
 	private int networkIdentity;
