@@ -127,6 +127,7 @@ public class ClientManager
         client.RegisterHandler((short) PacketTypes.PlayerRotation, PlayerRotation);
 		client.RegisterHandler((short) PacketTypes.PlayerActions, PlayerActions);
 		client.RegisterHandler((short) PacketTypes.PlayerDamage, PlayerDamage);
+		client.RegisterHandler((short) PacketTypes.PlayerDamageWithForce, PlayerDamageWithForce);
     }
 
     private static void NewConnection(NetworkMessage netMsg)
@@ -201,7 +202,7 @@ public class ClientManager
 		IdentifiedPlayerRotationPacket p = netMsg.ReadMessage<IdentifiedPlayerRotationPacket>();
 		Survivor entity = (Survivor) clientList[p.networkIdentity].Entity;
 
-		if ((clientList.ContainsKey(p.networkIdentity) && p.networkIdentity != networkIdentity))
+		if ((clientList.ContainsKey(p.networkIdentity)))
 		{
 			entity.UpdateRotation(p.angle, 90);
 			entity.LookingDirection = p.lookingDirection;
@@ -226,14 +227,35 @@ public class ClientManager
 
 	private static void PlayerDamage(NetworkMessage netMsg)
 	{
-		PlayerDamagePacket p = netMsg.ReadMessage<PlayerDamagePacket>();
+		DamagePacket p = netMsg.ReadMessage<DamagePacket>();
 		Survivor from = (Survivor) clientList[p.fromNetworkIdentity].Entity;
 		Survivor to = (Survivor) clientList[p.toNetworkIdentity].Entity;
 
-		if (to.GotHit(p.damage, p.force))
+		if (to.ReceivedDamage(p.damage))
 		{
 			from.Score += 1;
 			EventManager.AddInfoEvent(from.Nickname + " killed " + to.Nickname);
+			to.LastDamager = to;
+			return;
 		}
+
+		to.LastDamager = from;
+	}
+
+	private static void PlayerDamageWithForce(NetworkMessage netMsg)
+	{
+		DamageWithForcePacket p = netMsg.ReadMessage<DamageWithForcePacket>();
+		Survivor from = (Survivor) clientList[p.fromNetworkIdentity].Entity;
+		Survivor to = (Survivor) clientList[p.toNetworkIdentity].Entity;
+
+		if (to.ReceivedDamageWithForce(p.damage, p.force))
+		{
+			from.Score += 1;
+			EventManager.AddInfoEvent(from.Nickname + " killed " + to.Nickname);
+			to.LastDamager = to;
+			return;
+		}
+
+		to.LastDamager = from;
 	}
 }

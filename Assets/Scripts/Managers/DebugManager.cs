@@ -14,7 +14,9 @@ public class DebugManager : MonoBehaviour
 	[SerializeField]
 	private Text playerHealth;
 	[SerializeField]
-	private Text arrowStrength;
+	private Text flying;
+	[SerializeField]
+	private Text cooldown;
 
 	private GameObject me;
 	private PlayerBehaviour playerBehaviour;
@@ -34,6 +36,7 @@ public class DebugManager : MonoBehaviour
 		playerAngle.text = "Angle: " + entity.Angle;
 		playerSpeed.text = "Speed: " + entity.Speed;
 		playerHealth.text = "Health: " + entity.Hp;
-		arrowStrength.text = "Arrow Strength: " + entity.ArrowStrength;
+		flying.text = "Flying: " + entity.Flying;
+		cooldown.text = "Cooldown: " + entity.Cooldown;
 	}
 }

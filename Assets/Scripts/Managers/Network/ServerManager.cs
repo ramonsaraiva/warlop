@@ -19,6 +19,9 @@ public enum PacketTypes : short
 	PlayerRotation,
 	PlayerActions,
 	PlayerDamage,
+	PlayerDamageWithForce,
+	PlayerEnteredSafeArea,
+	PlayerLeftSafeArea,
 }
 
 public class HandshakePacket : MessageBase
@@ -318,34 +321,52 @@ public class IdentifiedPlayerRotationPacket : PlayerRotationPacket
 	public IdentifiedPlayerRotationPacket() { }
 }
 
-public class PlayerDamagePacket : RelationPacket
+public class DamagePacket : RelationPacket
 {
 	public float damage;
-	public Vector3 force;
 
 	public override void Deserialize(NetworkReader reader)
 	{
 		base.Deserialize(reader);
 		damage = reader.ReadSingle();
-		force = reader.ReadVector3();
 	}
 
 	public override void Serialize(NetworkWriter writer)
 	{
 		base.Serialize(writer);
 		writer.Write(damage);
+	}
+
+	public DamagePacket(int fromNetworkIdentity, int toNetworkIdentity, float damage) : base(fromNetworkIdentity, toNetworkIdentity)
+	{
+		this.damage = damage;
+	}
+
+	public DamagePacket() { }
+}
+
+public class DamageWithForcePacket : DamagePacket
+{
+	public Vector3 force;
+
+	public override void Deserialize(NetworkReader reader)
+	{
+		base.Deserialize(reader);
+		force = reader.ReadVector3();
+	}
+
+	public override void Serialize(NetworkWriter writer)
+	{
+		base.Serialize(writer);
 		writer.Write(force);
 	}
 
-	public PlayerDamagePacket(int fromNetworkIdentity, int toNetworkIdentity, float damage, Vector3 force) : base(fromNetworkIdentity, toNetworkIdentity)
+	public DamageWithForcePacket(int fromNetworkIdentity, int toNetworkIdentity, float damage, Vector3 force) : base(fromNetworkIdentity, toNetworkIdentity, damage)
 	{
-		this.fromNetworkIdentity = fromNetworkIdentity;
-		this.toNetworkIdentity = toNetworkIdentity;
-		this.damage = damage;
 		this.force = force;
 	}
 
-	public PlayerDamagePacket() { }
+	public DamageWithForcePacket() { }
 }
 #endregion Packets
 
@@ -388,9 +409,14 @@ public class ServerManager
 		NetworkServer.SendByChannelToAll((short)PacketTypes.EndGame, new EmptyMessage(), Channels.DefaultReliable);
 	}
 
-	public static void ApplyDamage(Survivor from, Survivor to, float damage, Vector3 force)
+	public static void ApplyDamage(Survivor from, Survivor to, float damage)
 	{
-		NetworkServer.SendByChannelToAll((short)PacketTypes.PlayerDamage, new PlayerDamagePacket(from.NetworkIdentity, to.NetworkIdentity, damage, force), Channels.DefaultReliable);
+		NetworkServer.SendByChannelToAll((short)PacketTypes.PlayerDamage, new DamagePacket(from.NetworkIdentity, to.NetworkIdentity, damage), Channels.DefaultReliable);
+	}
+
+	public static void ApplyDamageWithForce(Survivor from, Survivor to, float damage, Vector3 force)
+	{
+		NetworkServer.SendByChannelToAll((short)PacketTypes.PlayerDamageWithForce, new DamageWithForcePacket(from.NetworkIdentity, to.NetworkIdentity, damage, force), Channels.DefaultReliable);
 	}
 
     private static void RegisterHandlers()

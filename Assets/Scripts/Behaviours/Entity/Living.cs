@@ -3,16 +3,19 @@ using System.Collections;
 
 public class Living : Entity
 {
+	#region UnityFields
 	[SerializeField]
 	private Rigidbody2D rigidbody;
 	[SerializeField]
 	private NetworkCorrectionBehaviour networkCorrection;
+	#endregion UnityFields
 
-    private Vector3 movementDirection;
-	private Vector3 lastMovementDirection;
+	private Vector3 movementDirection;
 	private float speed;
 	private float angle;
+	private bool flying;
 
+	#region Properties
 	public Rigidbody2D Rigidbody
 	{
 		get { return rigidbody; }
@@ -39,7 +42,15 @@ public class Living : Entity
 	public float Angle
 	{
 		get { return angle; }
+		set { angle = value; }
 	}
+
+	public bool Flying
+	{
+		get { return flying; }
+		set { flying = value; }
+	}
+	#endregion Properties
 
 	public void UpdateDirection(Vector3 direction)
 	{
@@ -56,6 +67,9 @@ public class Living : Entity
 
 	protected virtual void FixedUpdate()
 	{
-		rigidbody.velocity = movementDirection * speed;
+		if (flying)
+			rigidbody.AddForce(movementDirection * speed, ForceMode2D.Force);
+		else
+			rigidbody.velocity = movementDirection * speed;
 	}
 }

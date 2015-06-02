@@ -25,6 +25,6 @@ public class FireballTrigger : NetworkTrigger
 
 	protected override void ServerAction()
 	{
-		ServerManager.ApplyDamage(entity, otherEntity, 10f, (otherEntity.transform.position - transform.position).normalized * 10f);
+		ServerManager.ApplyDamageWithForce(entity, otherEntity, 10f, (otherEntity.transform.position - transform.position).normalized * 5f);
 	}
 }

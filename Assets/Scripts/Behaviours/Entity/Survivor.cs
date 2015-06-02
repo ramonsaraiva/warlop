@@ -25,15 +25,23 @@ public class Survivor : Living
 
 	private float hp;
 	private int score;
+	private Survivor lastDamager;
+
+	private bool safe;
+	private float unsafeCounter;
+	private float unsafeRate = 1f;
+	private float unsafeDamage = 10f;
 
 	private float lastShot;
 	private float shotRate = 3f;
-	private float shotStartTime;
-	private float arrowStrength;
-	private bool shooting;
+	float cooldown;
+	bool shootFireball;
 
-	bool forced;
+	bool applyForce;
 	Vector3 force;
+	float stopFlyingTime;
+	float flyTime = 2f;
+
 
 	#region Properties
 	public Vector3 LookingDirection
@@ -63,19 +71,29 @@ public class Survivor : Living
 		set { score = value; }
 	}
 
-	public float ArrowStrength
+	public Survivor LastDamager
 	{
-		get { return arrowStrength; }
+		get { return lastDamager; }
+		set { lastDamager = value; }
 	}
+
+	public float Cooldown
+	{
+		get { return cooldown; }
+	}
+
 	#endregion Properties
 
 	#region UnityMethods
 	protected override void Awake()
 	{
 		base.Awake();
+
 		Speed = DataManager.DataConstants.speed;
 		hp = 100f;
 		lastShot = Time.time - shotRate;
+		lastDamager = this;
+		safe = true;
 	}
 
 	public void Update()
@@ -90,17 +108,18 @@ public class Survivor : Living
 		else
 			animator.SetBool("Moving", false);
 
-		if (Time.time > lastShot + shotRate && shooting)
-		{
-			float deltaShotTime = Time.time - shotStartTime;
-			if (deltaShotTime > 2f)
-				deltaShotTime = 2f;
-			float multiplier = deltaShotTime / 2f;
-			arrowStrength = 10 * multiplier;
-		}
+		if (Flying && Time.time > stopFlyingTime)
+			Flying = false;
+
+		if (Time.time - lastShot <= 3f)
+			cooldown = -(Time.time - lastShot - 3);
 		else
+			cooldown = 3f;
+
+		if (!safe && Time.time > unsafeCounter + unsafeRate)
 		{
-			arrowStrength = 0;
+			ServerManager.ApplyDamage(lastDamager, this, unsafeDamage);
+			unsafeCounter += unsafeRate;
 		}
 	}
 
@@ -108,10 +127,21 @@ public class Survivor : Living
 	{
 		base.FixedUpdate();
 
-		if (forced)
+		if (applyForce)
 		{
-			Rigidbody.AddForce(force, ForceMode2D.Impulse);
-			forced = false;
+			Rigidbody.velocity = force;
+			applyForce = false;
+		}
+
+		if (shootFireball)
+		{
+			shootFireball = false;
+
+			lastShot = Time.time;
+			GameObject arrow = Instantiate(arrowPrefab, transform.position, transform.rotation) as GameObject;
+			arrow.GetComponent<Rigidbody2D>().velocity = LookingDirection * DataManager.DataConstants.arrowBaseForce;
+			arrow.GetComponent<Rigidbody2D>().AddTorque(200f);
+			arrow.GetComponent<FireballTrigger>().entity = this;
 		}
 	}
 	#endregion UnityMethods
@@ -121,18 +151,8 @@ public class Survivor : Living
 		switch (action)
 		{
 			case InputActions.Shoot:
-				if (value)
-				{
-					if (Time.time > lastShot + shotRate)
-					{
-						shotStartTime = Time.time;
-						shooting = true;
-					}
-				}
-				else
-				{
+				if (!value)
 					Shoot();
-				}
 				break;
 			case InputActions.Sprint:
 				//sprint
@@ -145,34 +165,56 @@ public class Survivor : Living
 		bool outOfCooldown = Time.time > lastShot + shotRate;
 
 		if (outOfCooldown)
-		{
-			lastShot = Time.time;
-			GameObject arrow = Instantiate(arrowPrefab, transform.position, transform.rotation) as GameObject;
-			arrow.GetComponent<Rigidbody2D>().velocity = LookingDirection * DataManager.DataConstants.arrowBaseForce;
-			arrow.GetComponent<Rigidbody2D>().AddTorque(200f);
-			arrow.GetComponent<FireballTrigger>().entity = this;
-
-			shooting = false;
-		}
+			shootFireball = true;
 	}
 
-	public bool GotHit(float damage, Vector3 force)
+	public bool ReceivedDamage(float damage)
 	{
 		hurtSource.Play();
+		return ApplyDamage(damage);
+	}
 
-		Debug.Log(force);
-		forced = true;
-		this.force = force;
-		Rigidbody.AddForce(force, ForceMode2D.Impulse);
-		
+	public bool ReceivedDamageWithForce(float damage, Vector3 force)
+	{
+		hurtSource.Play();
+		ApplyForce(force);
+		return ApplyDamage(damage);
+	}
+
+	public void EnteredSafeArea()
+	{
+		safe = true;
+	}
+
+	public void LeftSafeArea()
+	{
+		safe = false;
+		unsafeCounter = Time.time;
+	}
+
+	private bool ApplyDamage(float damage)
+	{
 		if (damage > hp)
 		{
-			score -= 1;
-			hp = 100;
+			Die();
 			return true;
 		}
 
 		hp -= damage;
 		return false;
+	}
+
+	private void ApplyForce(Vector3 force)
+	{
+		applyForce = true;
+		this.force = force;
+		Flying = true;
+		stopFlyingTime = Time.time + flyTime;
+	}
+
+	private void Die()
+	{
+		score -= 1;
+		hp = 100;
 	}
 }

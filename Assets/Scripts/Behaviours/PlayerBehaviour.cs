@@ -18,8 +18,6 @@ public class PlayerBehaviour : MonoBehaviour
 	private bool actionChanged;
 	private short inputs;
 
-	bool test;
-
     void Awake()
     {
 		entity = GetComponent<Survivor>();
@@ -29,7 +27,6 @@ public class PlayerBehaviour : MonoBehaviour
 
 		Camera2DFollow cameraFollow = Camera.main.gameObject.AddComponent<Camera2DFollow>();
 		cameraFollow.target = transform;
-		//cameraFollow.damping = 0.2f;
     }
 
     void Update()
@@ -38,7 +35,7 @@ public class PlayerBehaviour : MonoBehaviour
 		entity.UpdateDirection(direction.normalized);
 
 		mouseWorldPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-		entity.UpdateRotation(Mathf.Atan2(transform.position.y - mouseWorldPosition.y, transform.position.x - mouseWorldPosition.x) * Mathf.Rad2Deg, 90f);
+		entity.Angle = Mathf.Atan2(transform.position.y - mouseWorldPosition.y, transform.position.x - mouseWorldPosition.x) * Mathf.Rad2Deg;
 		entity.LookingDirection = mouseWorldPosition - transform.position;
 
 		if (direction != lastDirection)
@@ -77,19 +74,5 @@ public class PlayerBehaviour : MonoBehaviour
 
 		if (actionChanged)
 			ClientManager.SendActions(inputs);
-
-		if (Input.GetButtonDown("Action1"))
-		{
-			test = true;
-		}
     }
-
-	void FixedUpdate()
-	{
-		if (test)
-		{
-			test = false;
-			entity.Rigidbody.AddRelativeForce(Vector3.up * 5f, ForceMode2D.Impulse);
-		}
-	}
 }
