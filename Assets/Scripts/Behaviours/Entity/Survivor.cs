@@ -2,13 +2,15 @@
 using UnityEngine.UI;
 using Warlop.Constants;
 
+using System.Collections.Generic;
+
 public class Survivor : Living
 {
 	#region UnityFields
 	[SerializeField]
 	private Animator animator;
 	[SerializeField]
-	private GameObject fireballPrefab;
+	public GameObject fireballPrefab;
 	[SerializeField]
 	private Canvas canvas;
 	[SerializeField]
@@ -30,18 +32,11 @@ public class Survivor : Living
 	private bool safe;
 	private float unsafeCounter;
 
-	private float lastShot;
-	private float cooldown;
-	private bool shootFireball;
-
 	private bool applyForce;
 	private Vector3 force;
 	private float stopFlyingTime;
 
-	private float stopChannelingTime;
-
-	private float lastExplosion;
-	private bool makeExplosion;
+	private List<SpellBehaviour> spells;
 
 	#region Properties
 	public Vector3 LookingDirection
@@ -76,12 +71,6 @@ public class Survivor : Living
 		get { return lastDamager; }
 		set { lastDamager = value; }
 	}
-
-	public float Cooldown
-	{
-		get { return cooldown; }
-	}
-
 	#endregion Properties
 
 	#region UnityMethods
@@ -91,10 +80,11 @@ public class Survivor : Living
 
 		Speed = WizardConstants.StartingSpeed;
 		hp = WizardConstants.StartingHealth;
-		lastShot = Time.time - SpellConstants.FireballRate;
-		lastExplosion = Time.time - SpellConstants.ExplosionRate;
 		lastDamager = this;
 		safe = true;
+
+		spells = new List<SpellBehaviour>();
+		spells.Add(gameObject.AddComponent<FireballBehaviour>());
 	}
 
 	protected override void Update()
@@ -114,21 +104,10 @@ public class Survivor : Living
 		if (Flying && Time.time > stopFlyingTime)
 			Flying = false;
 
-		if (Time.time - lastShot <= 3f)
-			cooldown = -(Time.time - lastShot - 3);
-		else
-			cooldown = 3f;
-
 		if (!safe && Time.time > unsafeCounter + EnvironmentConstants.UnsafeAreaRate)
 		{
 			ServerManager.ApplyDamage(lastDamager, this, EnvironmentConstants.UnsafeAreaDPR);
 			unsafeCounter += EnvironmentConstants.UnsafeAreaRate;
-		}
-
-		if (Channeling && Time.time > stopChannelingTime)
-		{
-			Channeling = false;
-			makeExplosion = true;
 		}
 	}
 
@@ -142,17 +121,7 @@ public class Survivor : Living
 			applyForce = false;
 		}
 
-		if (shootFireball)
-		{
-			shootFireball = false;
-			lastShot = Time.time;
-
-			GameObject fireball = Instantiate(fireballPrefab, transform.position, transform.rotation) as GameObject;
-			fireball.GetComponent<Rigidbody2D>().velocity = LookingDirection * SpellConstants.FireballSpeed;
-			fireball.GetComponent<Rigidbody2D>().AddTorque(400f);
-			fireball.GetComponent<FireballTrigger>().entity = this;
-		}
-
+		/*
 		if (makeExplosion)
 		{
 			makeExplosion = false;
@@ -174,6 +143,7 @@ public class Survivor : Living
 				}
 			}
 		}
+		*/
 	}
 	#endregion UnityMethods
 
@@ -181,25 +151,18 @@ public class Survivor : Living
 	{
 		switch (action)
 		{
-			case InputActions.Fireball:
+			case InputActions.PrimarySkill:
 				if (!value)
-					Shoot();
+					spells[0].Use();
 				break;
-			case InputActions.Explosion:
+			case InputActions.SecondarySkill:
 				if (!value)
-					Explosion();
+					spells[1].Use();
 				break;
 		}
 	}
 
-	private void Shoot()
-	{
-		bool outOfCooldown = Time.time > lastShot + SpellConstants.FireballRate;
-
-		if (outOfCooldown)
-			shootFireball = true;
-	}
-
+	/*
 	private void Explosion()
 	{
 		bool outOfCooldown = Time.time > lastExplosion + SpellConstants.ExplosionRate;
@@ -211,7 +174,7 @@ public class Survivor : Living
 		stopChannelingTime = Time.time + SpellConstants.ExplosionChannelingTime;
 		animator.SetTrigger("Explosion");
 	}
-
+	*/
 
 	public bool ReceivedDamage(float damage)
 	{

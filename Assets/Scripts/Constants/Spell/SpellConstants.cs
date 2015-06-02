@@ -4,8 +4,9 @@ namespace Warlop.Constants
 	public static class SpellConstants
 	{
 		public const float FireballRate = 3f;
-		public const float FireballSpeed = 8f;
+		public const float FireballForce = 8f;
 		public const float FireballDamage = 10f;
+		public const float FireballTorque = 400f;
 
 		public const float ExplosionRate = 0f;
 		public const float ExplosionRadius = 1.5f;

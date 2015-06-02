@@ -37,6 +37,5 @@ public class DebugManager : MonoBehaviour
 		playerSpeed.text = "Speed: " + entity.Speed;
 		playerHealth.text = "Health: " + entity.Hp;
 		flying.text = "Flying: " + entity.Flying;
-		cooldown.text = "Cooldown: " + entity.Cooldown;
 	}
 }

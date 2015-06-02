@@ -5,8 +5,12 @@ public class Entity : MonoBehaviour
 {
 	public enum InputActions
 	{
-		Fireball = 0,
-		Explosion = 1,
+		PrimarySkill = 0,
+		SecondarySkill = 1,
+		QSkill = 3,
+		ESkill = 4,
+		RSkill = 5,
+		TSkill = 6
 	}
 
 	private int networkIdentity;
