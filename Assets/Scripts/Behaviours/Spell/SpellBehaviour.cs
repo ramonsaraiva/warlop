@@ -4,21 +4,18 @@ public class SpellBehaviour : MonoBehaviour
 {
 	protected Survivor entity;
 
-	protected float rate;
-	protected float damage;
-
 	protected bool channeled;
 	protected bool animated;
 
-	private float channelingTime;
+	protected float rate;
+	protected float damage;
+	protected float channeling;
+
 	private float channelingStopTime;
 	private bool entityFrozen;
 
 	private bool inUse;
 	private float lastUse;
-
-	#region Properties
-	#endregion Properties
 
 	protected virtual void Awake()
 	{
@@ -40,7 +37,7 @@ public class SpellBehaviour : MonoBehaviour
 		if (channeled)
 		{
 			entity.Channeling = true;
-			channelingStopTime = Time.time + channelingTime;
+			channelingStopTime = Time.time + channeling;
 		}
 
 		if (animated)
@@ -49,7 +46,10 @@ public class SpellBehaviour : MonoBehaviour
 		}
 
 		if (!channeled)
+		{
 			Action();
+			Finish();
+		}
 	}
 	
 	protected virtual void Update()
@@ -61,6 +61,7 @@ public class SpellBehaviour : MonoBehaviour
 		{
 			entity.Channeling = false;
 			Action();
+			Finish();
 		}
 	}
 
@@ -82,5 +83,11 @@ public class SpellBehaviour : MonoBehaviour
 
 	protected virtual void Action()
 	{
+	}
+
+	private void Finish()
+	{
+		inUse = false;
+		entityFrozen = false;
 	}
 }

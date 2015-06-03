@@ -25,11 +25,11 @@ public class FireballBehaviour : SpellBehaviour
 
 		use = false;
 
-		GameObject spell = Instantiate(entity.fireballPrefab, transform.position, transform.rotation) as GameObject;
-		Rigidbody2D spellRigidbody = spell.GetComponent<Rigidbody2D>();
-		spellRigidbody.velocity = entity.LookingDirection * SpellConstants.FireballForce;
-		spellRigidbody.AddTorque(SpellConstants.FireballTorque);
-		spell.GetComponent<FireballTrigger>().entity = entity;
+		GameObject fireball = Instantiate(entity.fireballPrefab, transform.position, transform.rotation) as GameObject;
+		Rigidbody2D fireballRigidbody = fireball.GetComponent<Rigidbody2D>();
+		fireballRigidbody.velocity = entity.LookingDirection * SpellConstants.FireballForce;
+		fireballRigidbody.AddTorque(SpellConstants.FireballTorque);
+		fireball.GetComponent<FireballTrigger>().entity = entity;
 	}
 
 	protected override void Animate()

@@ -39,6 +39,11 @@ public class Survivor : Living
 	private List<SpellBehaviour> spells;
 
 	#region Properties
+	public Animator Animator
+	{
+		get { return animator; }
+	}
+
 	public Vector3 LookingDirection
 	{
 		get
@@ -85,6 +90,7 @@ public class Survivor : Living
 
 		spells = new List<SpellBehaviour>();
 		spells.Add(gameObject.AddComponent<FireballBehaviour>());
+		spells.Add(gameObject.AddComponent<KnockbackBehaviour>());
 	}
 
 	protected override void Update()
@@ -120,35 +126,14 @@ public class Survivor : Living
 			Rigidbody.velocity = force;
 			applyForce = false;
 		}
-
-		/*
-		if (makeExplosion)
-		{
-			makeExplosion = false;
-			lastExplosion = Time.time;
-
-			Rigidbody.velocity = Vector3.zero;
-
-			if (ServerManager.IsServer())
-			{
-				Collider2D[] hit = Physics2D.OverlapCircleAll(transform.position, SpellConstants.ExplosionRadius, 1 << LayerMask.NameToLayer("Player"));
-				foreach (Collider2D coll in hit)
-				{
-					if (coll.gameObject == gameObject)
-						continue;
-
-					float explosionDistance = Vector3.Distance(transform.position, coll.transform.position);
-					Vector3 explosionForce = (coll.transform.position - transform.position).normalized * SpellConstants.ExplosionForce * (2 - explosionDistance);
-					ServerManager.ApplyDamageWithForce(this, coll.GetComponent<Survivor>(), SpellConstants.ExplosionDamage, explosionForce);
-				}
-			}
-		}
-		*/
 	}
 	#endregion UnityMethods
 
 	public override void SetAction(InputActions action, bool value)
 	{
+		if (Channeling)
+			return;
+
 		switch (action)
 		{
 			case InputActions.PrimarySkill:
@@ -161,20 +146,6 @@ public class Survivor : Living
 				break;
 		}
 	}
-
-	/*
-	private void Explosion()
-	{
-		bool outOfCooldown = Time.time > lastExplosion + SpellConstants.ExplosionRate;
-
-		if (!outOfCooldown)
-			return;
-
-		Channeling = true;
-		stopChannelingTime = Time.time + SpellConstants.ExplosionChannelingTime;
-		animator.SetTrigger("Explosion");
-	}
-	*/
 
 	public bool ReceivedDamage(float damage)
 	{
