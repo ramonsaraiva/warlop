@@ -13,5 +13,8 @@ namespace Warlop.Constants
 		public const float KnockbackForce = 5f;
 		public const float KnockbackDamage = 5f;
 		public const float KnockbackChanneling = 1.5f;
+
+		public const float TeleportRate = 0f;
+		public const float TeleportRange = 7f;
 	}
 }

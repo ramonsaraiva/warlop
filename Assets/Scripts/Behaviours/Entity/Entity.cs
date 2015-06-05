@@ -7,10 +7,10 @@ public class Entity : MonoBehaviour
 	{
 		PrimarySkill = 0,
 		SecondarySkill = 1,
-		QSkill = 3,
-		ESkill = 4,
-		RSkill = 5,
-		TSkill = 6
+		QSkill = 2,
+		ESkill = 3,
+		RSkill = 4,
+		TSkill = 5
 	}
 
 	private int networkIdentity;

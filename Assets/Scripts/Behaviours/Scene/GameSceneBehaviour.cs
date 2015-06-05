@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Linq;
+using Warlop.Constants;
 
 public class GameSceneBehaviour : MonoBehaviour
 {
@@ -15,12 +16,44 @@ public class GameSceneBehaviour : MonoBehaviour
 	private GameObject lavaPrefab;
 	[SerializeField]
 	private Transform groundParent;
+	[SerializeField]
+	private BoxCollider2D platformCollider;
 
+	private GameObject[,] map;
+
+	private float groundSize;
+	private float lavaSize;
+
+	private float platformDestroyRate = 2f;
+	private float platformLastDestroy;
+	private int platformCurrentBorder;
+
+	private void Awake()
+	{
+		groundSize = 3.3f;
+		lavaSize = 3.24f;
+		platformCurrentBorder = EnvironmentConstants.PlatformSize;
+	}
+
+	private void Start()
+	{
+		platformLastDestroy = Time.time;
+		map = new GameObject[EnvironmentConstants.PlatformSize / 2, EnvironmentConstants.PlatformSize];
+
+		platformCollider.size = new Vector2(EnvironmentConstants.PlatformSize * groundSize, EnvironmentConstants.PlatformSize * groundSize);
+	}
 
 	private void Update()
 	{
 		if (EventManager.infos.Count > 0)
 			ShowInfo(EventManager.infos.Dequeue());
+
+		if (Time.time > platformLastDestroy + platformDestroyRate)
+		{
+			DestroyBorder();
+			platformLastDestroy = Time.time;
+			platformCurrentBorder--;
+		}
 	}
 	
 	public void ShowInfo(string info)
@@ -46,22 +79,36 @@ public class GameSceneBehaviour : MonoBehaviour
 	{
 		GameObject ground;
 
-		for (int i = -6; i <= 6; i++)
+		int halfMapSize = EnvironmentConstants.MapSize / 2;
+		int halfPlatformSize = EnvironmentConstants.PlatformSize / 2;
+
+		for (int i = 0; i < EnvironmentConstants.MapSize; i++)
 		{
-			for (int j = -6; j <= 6; j++)
+			for (int j = 0; j < EnvironmentConstants.MapSize; j++)
 			{
-				ground = Instantiate(lavaPrefab, new Vector3(i * 3.24f, j * 3.24f, 0), Quaternion.identity) as GameObject;
+				ground = Instantiate(lavaPrefab, new Vector3((i - halfMapSize) * lavaSize, (j - halfMapSize) * lavaSize, 0), Quaternion.identity) as GameObject;
 				ground.transform.parent = groundParent;
 			}
 		}
 
-		for (int i = -2; i <= 2; i++)
+		for (int i = 0; i < EnvironmentConstants.PlatformSize; i++)
 		{
-			for (int j = -2; j <= 2; j++)
+			for (int j = 0; j < EnvironmentConstants.PlatformSize; j++)
 			{
-				ground = Instantiate(groundPrefab, new Vector3(i * 3.3f, j * 3.3f, 0), Quaternion.identity) as GameObject;
+				ground = Instantiate(groundPrefab, new Vector3((i - halfPlatformSize) * groundSize, (j - halfPlatformSize) * groundSize, 0), Quaternion.identity) as GameObject;
 				ground.transform.parent = groundParent;
 			}
 		}
+	}
+
+	private void DestroyBorder()
+	{
+		/*
+		for (int i = map.Length - platformCurrentBorder; i < platformCurrentBorder; i++)
+		{
+			Destroy(map[i,map.Length - platformCurrentBorder]);
+			Destroy(map[map.Length - platformCurrentBorder,i]);
+		}
+		*/
 	}
 }

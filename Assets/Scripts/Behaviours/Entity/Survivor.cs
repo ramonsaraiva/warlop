@@ -91,6 +91,7 @@ public class Survivor : Living
 		spells = new List<SpellBehaviour>();
 		spells.Add(gameObject.AddComponent<FireballBehaviour>());
 		spells.Add(gameObject.AddComponent<KnockbackBehaviour>());
+		spells.Add(gameObject.AddComponent<TeleportBehaviour>());
 	}
 
 	protected override void Update()
@@ -143,6 +144,10 @@ public class Survivor : Living
 			case InputActions.SecondarySkill:
 				if (!value)
 					spells[1].Use();
+				break;
+			case InputActions.QSkill:
+				if (!value)
+					spells[2].Use();
 				break;
 		}
 	}
