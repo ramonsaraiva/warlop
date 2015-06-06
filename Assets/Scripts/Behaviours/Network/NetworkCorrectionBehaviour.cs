@@ -3,6 +3,7 @@ public class NetworkCorrectionBehaviour : MonoBehaviour
 {
 	private Vector3 serverPosition;
 	private float correctionSpeed;
+    private bool forciblyDisabled;
 
 	void Awake()
 	{
@@ -14,14 +15,16 @@ public class NetworkCorrectionBehaviour : MonoBehaviour
 		transform.position = Vector3.Lerp(transform.position, serverPosition, correctionSpeed);
 
 		float distance = (transform.position - serverPosition).sqrMagnitude;
+
 		if (distance < 0.05f)
-		{
 			enabled = false;
-		}
 	}
 
 	public void NewServerPosition(Vector3 position)
 	{
+        if (forciblyDisabled)
+            return;
+
 		float distance = (transform.position - position).sqrMagnitude;
 		if (distance < 0.05f)
 		{
@@ -45,4 +48,15 @@ public class NetworkCorrectionBehaviour : MonoBehaviour
 			serverPosition = position;
 		}
 	}
+
+    public void ForciblyDisable()
+    {
+        forciblyDisabled = true;
+        this.enabled = false;
+    }
+
+    public void ForciblyEnable()
+    {
+        forciblyDisabled = false;
+    }
 }

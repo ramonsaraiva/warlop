@@ -193,8 +193,11 @@ public class ClientManager
 
 		bool desync = p.networkIdentity == networkIdentity && Vector3.Distance(p.value, entity.transform.position) > 1.0f;
 
-		if ((clientList.ContainsKey(p.networkIdentity) && p.networkIdentity != networkIdentity))// || desync)
-			entity.NetworkCorrection.NewServerPosition(p.value);
+        if ((clientList.ContainsKey(p.networkIdentity) && p.networkIdentity != networkIdentity))// || desync)
+        {
+            entity.NetworkCorrection.NewServerPosition(p.value);
+            Debug.Log("received sv position: " + p.value);
+        }
     }
 
     private static void PlayerRotation(NetworkMessage netMsg)

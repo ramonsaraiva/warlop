@@ -72,7 +72,8 @@ public class SpellBehaviour : MonoBehaviour
 
 		if (channeled && !entityFrozen)
 		{
-			entity.Rigidbody.velocity = Vector3.zero;
+            if (!entity.Flying)
+			    entity.Rigidbody.velocity = Vector3.zero;
 			entityFrozen = true;
 		}
 	}

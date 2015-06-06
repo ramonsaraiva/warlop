@@ -466,13 +466,11 @@ public class ServerManager
     {
         Vector3 value = netMsg.ReadMessage<Vector3Packet>().value;
 
-		/*
 		Vector3 serverPosition = ClientManager.ClientList[netMsg.conn.connectionId].Entity.transform.position;
 
 		float desyncDistance = Vector3.Distance(value, serverPosition);
-		if (desyncDistance > 1.0f)
-			value = serverPosition;
-		*/
+        if (desyncDistance > 1.5f)
+            value = serverPosition;
 
         NetworkServer.SendByChannelToAll((short) PacketTypes.PlayerPosition, new IdentifiedVector3Packet(netMsg.conn.connectionId, value), Channels.DefaultUnreliable);
     }

@@ -25,6 +25,8 @@ public class TeleportBehaviour : SpellBehaviour
 	{
 		base.Action();
 
+        entity.NetworkCorrection.ForciblyDisable();
 		entity.transform.position = entity.transform.position + (entity.LookingDirection * range);
+        entity.NetworkCorrection.ForciblyEnable();
 	}
 }
