@@ -24,6 +24,7 @@ public class Survivor : Living
 	#endregion UnityFields
 
 	private Vector3 lookingDirection;
+    private Vector3 mouseWorldPosition;
 
 	private float hp;
 	private int score;
@@ -58,6 +59,12 @@ public class Survivor : Living
 			lookingDirection.Normalize();
 		}
 	}
+
+    public Vector3 MouseWorldPosition
+    {
+        get { return mouseWorldPosition; }
+        set { mouseWorldPosition = value; }
+    }
 
 	public float Hp
 	{

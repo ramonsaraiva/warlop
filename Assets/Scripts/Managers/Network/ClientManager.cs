@@ -110,6 +110,11 @@ public class ClientManager
 		client.SendByChannel((short) PacketTypes.PlayerRotation, new PlayerRotationPacket(angle, lookingDirection), Channels.DefaultUnreliable);
 	}
 
+    public static void SendPlayerMouseWorldPosition(Vector3 mouseWorldPosition)
+    {
+        client.SendByChannel((short) PacketTypes.PlayerMouseWorldPosition, new Vector3Packet(mouseWorldPosition), Channels.DefaultUnreliable);
+    }
+
 	public static void SendActions(short actions)
 	{
 		client.SendByChannel((short) PacketTypes.PlayerActions, new ShortPacket(actions), Channels.DefaultReliable);
@@ -125,6 +130,7 @@ public class ClientManager
         client.RegisterHandler((short) PacketTypes.PlayerInput, PlayerInput);
         client.RegisterHandler((short) PacketTypes.PlayerPosition, PlayerPosition);
         client.RegisterHandler((short) PacketTypes.PlayerRotation, PlayerRotation);
+        client.RegisterHandler((short) PacketTypes.PlayerMouseWorldPosition, PlayerMouseWorldPosition);
 		client.RegisterHandler((short) PacketTypes.PlayerActions, PlayerActions);
 		client.RegisterHandler((short) PacketTypes.PlayerDamage, PlayerDamage);
 		client.RegisterHandler((short) PacketTypes.PlayerDamageWithForce, PlayerDamageWithForce);
@@ -196,7 +202,6 @@ public class ClientManager
         if ((clientList.ContainsKey(p.networkIdentity) && p.networkIdentity != networkIdentity))// || desync)
         {
             entity.NetworkCorrection.NewServerPosition(p.value);
-            Debug.Log("received sv position: " + p.value);
         }
     }
 
@@ -210,6 +215,15 @@ public class ClientManager
 			entity.UpdateRotation(p.angle, 90);
 			entity.LookingDirection = p.lookingDirection;
 		}
+    }
+
+    private static void PlayerMouseWorldPosition(NetworkMessage netMsg)
+    {
+        IdentifiedVector3Packet p = netMsg.ReadMessage<IdentifiedVector3Packet>();
+        Survivor entity = (Survivor)clientList[p.networkIdentity].Entity;
+
+        if ((clientList.ContainsKey(p.networkIdentity)))
+            entity.MouseWorldPosition = p.value;
     }
 
 	private static void PlayerActions(NetworkMessage netMsg)

@@ -26,7 +26,12 @@ public class TeleportBehaviour : SpellBehaviour
 		base.Action();
 
         entity.NetworkCorrection.ForciblyDisable();
-		entity.transform.position = entity.transform.position + (entity.LookingDirection * range);
+
+        Vector3 desiredPosition = entity.MouseWorldPosition;
+        if (Vector3.Distance(desiredPosition, entity.transform.position) > range)
+            desiredPosition = entity.transform.position + (entity.LookingDirection * range);
+
+		entity.transform.position = desiredPosition;
         entity.NetworkCorrection.ForciblyEnable();
 	}
 }

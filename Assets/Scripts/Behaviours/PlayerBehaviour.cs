@@ -35,6 +35,7 @@ public class PlayerBehaviour : MonoBehaviour
 		entity.UpdateDirection(direction.normalized);
 
 		mouseWorldPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        mouseWorldPosition.z = 0f;
 		entity.Angle = Mathf.Atan2(transform.position.y - mouseWorldPosition.y, transform.position.x - mouseWorldPosition.x) * Mathf.Rad2Deg;
 		entity.LookingDirection = mouseWorldPosition - transform.position;
 
@@ -54,6 +55,7 @@ public class PlayerBehaviour : MonoBehaviour
 		{
 			lastMouseWorldPosition = mouseWorldPosition;
 			ClientManager.SendPlayerRotation(entity.Angle, entity.LookingDirection);
+            ClientManager.SendPlayerMouseWorldPosition(mouseWorldPosition);
 		}
 
 		inputs = 0;

@@ -17,6 +17,7 @@ public enum PacketTypes : short
     PlayerInput,
 	PlayerPosition,
 	PlayerRotation,
+    PlayerMouseWorldPosition,
 	PlayerActions,
 	PlayerDamage,
 	PlayerDamageWithForce,
@@ -428,12 +429,15 @@ public class ServerManager
         NetworkServer.RegisterHandler((short) PacketTypes.PlayerInput, PlayerInput);
         NetworkServer.RegisterHandler((short) PacketTypes.PlayerPosition, PlayerPosition);
 		NetworkServer.RegisterHandler((short) PacketTypes.PlayerRotation, PlayerRotation);
+        NetworkServer.RegisterHandler((short) PacketTypes.PlayerMouseWorldPosition, PlayerMouseWorldPosition);
 		NetworkServer.RegisterHandler((short) PacketTypes.PlayerActions, PlayerActions);
     }
 
     private static void NewConnection(NetworkMessage netMsg)
     {
 		string nickname = netMsg.ReadMessage<StringMessage>().value;
+        if (nickname == "")
+            nickname = "Player " + NetworkServer.connections.Count;
 
         HandshakePacket p = new HandshakePacket();
         p.networkIdentity = netMsg.conn.connectionId;
@@ -480,6 +484,12 @@ public class ServerManager
 		PlayerRotationPacket p = netMsg.ReadMessage<PlayerRotationPacket>();
         NetworkServer.SendByChannelToAll((short) PacketTypes.PlayerRotation, new IdentifiedPlayerRotationPacket(netMsg.conn.connectionId, p.angle, p.lookingDirection), Channels.DefaultUnreliable);
 	}
+    
+    private static void PlayerMouseWorldPosition(NetworkMessage netMsg)
+    {
+        Vector3 value = netMsg.ReadMessage<Vector3Packet>().value;
+        NetworkServer.SendByChannelToAll((short) PacketTypes.PlayerMouseWorldPosition, new IdentifiedVector3Packet(netMsg.conn.connectionId, value), Channels.DefaultUnreliable);
+    }
 
 	private static void PlayerActions(NetworkMessage netMsg)
 	{
