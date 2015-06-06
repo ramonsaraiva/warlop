@@ -25,13 +25,19 @@ public class TeleportBehaviour : SpellBehaviour
 	{
 		base.Action();
 
-        entity.NetworkCorrection.ForciblyDisable();
+        if (ServerManager.IsServer())
+        {
+            Vector3 desiredPosition = entity.MouseWorldPosition;
+            if (Vector3.Distance(desiredPosition, entity.transform.position) > range)
+                desiredPosition = entity.transform.position + (entity.LookingDirection * range);
 
-        Vector3 desiredPosition = entity.MouseWorldPosition;
-        if (Vector3.Distance(desiredPosition, entity.transform.position) > range)
-            desiredPosition = entity.transform.position + (entity.LookingDirection * range);
-
-		entity.transform.position = desiredPosition;
-        entity.NetworkCorrection.ForciblyEnable();
+            ServerManager.Teleport(entity, desiredPosition);
+            /*
+             * okay, so now to fix everything inside the teleport spell
+             * i need to correct (self position) if this is wrong related to the server
+             * so when receiving the server position, even if its me, if im not synced
+             * i NEED to fix the position...
+             */
+        }
 	}
 }

@@ -52,7 +52,7 @@ public class NetworkCorrectionBehaviour : MonoBehaviour
     public void ForciblyDisable()
     {
         forciblyDisabled = true;
-        this.enabled = false;
+        enabled = false;
     }
 
     public void ForciblyEnable()

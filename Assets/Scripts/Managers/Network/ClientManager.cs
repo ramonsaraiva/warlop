@@ -56,10 +56,12 @@ public class ClientManager
     private static Dictionary<int, ClientInfo> clientList;
     private static ClientInfo localClient;
 
+    #region Properties
     public static Dictionary<int, ClientInfo> ClientList
     {
         get { return clientList; }
     }
+    #endregion Properties
 
     public static void Connect(string address, int port, string nickname)
     {
@@ -134,6 +136,7 @@ public class ClientManager
 		client.RegisterHandler((short) PacketTypes.PlayerActions, PlayerActions);
 		client.RegisterHandler((short) PacketTypes.PlayerDamage, PlayerDamage);
 		client.RegisterHandler((short) PacketTypes.PlayerDamageWithForce, PlayerDamageWithForce);
+		client.RegisterHandler((short) PacketTypes.PlayerTeleport, PlayerTeleport);
     }
 
     private static void NewConnection(NetworkMessage netMsg)
@@ -197,7 +200,7 @@ public class ClientManager
         IdentifiedVector3Packet p = netMsg.ReadMessage<IdentifiedVector3Packet>();
 		Living entity = (Living) clientList[p.networkIdentity].Entity;
 
-		bool desync = p.networkIdentity == networkIdentity && Vector3.Distance(p.value, entity.transform.position) > 1.0f;
+		//bool desync = p.networkIdentity == networkIdentity && Vector3.Distance(p.value, entity.transform.position) > 1.5f;
 
         if ((clientList.ContainsKey(p.networkIdentity) && p.networkIdentity != networkIdentity))// || desync)
         {
@@ -275,4 +278,15 @@ public class ClientManager
 
 		to.LastDamager = from;
 	}
+
+    private static void PlayerTeleport(NetworkMessage netMsg)
+    {
+        IdentifiedVector3Packet p = netMsg.ReadMessage<IdentifiedVector3Packet>();
+
+        if (clientList.ContainsKey(p.networkIdentity))
+        {
+            // maybe also disable network correction?!
+            clientList[p.networkIdentity].Entity.transform.position = p.value;
+        }
+    }
 }
