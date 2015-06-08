@@ -32,12 +32,6 @@ public class TeleportBehaviour : SpellBehaviour
                 desiredPosition = entity.transform.position + (entity.LookingDirection * range);
 
             ServerManager.Teleport(entity, desiredPosition);
-            /*
-             * okay, so now to fix everything inside the teleport spell
-             * i need to correct (self position) if this is wrong related to the server
-             * so when receiving the server position, even if its me, if im not synced
-             * i NEED to fix the position...
-             */
         }
 	}
 }

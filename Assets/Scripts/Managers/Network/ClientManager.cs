@@ -200,12 +200,10 @@ public class ClientManager
         IdentifiedVector3Packet p = netMsg.ReadMessage<IdentifiedVector3Packet>();
 		Living entity = (Living) clientList[p.networkIdentity].Entity;
 
-		//bool desync = p.networkIdentity == networkIdentity && Vector3.Distance(p.value, entity.transform.position) > 1.5f;
+		bool desync = p.networkIdentity == networkIdentity && Vector3.Distance(p.value, entity.transform.position) > 0.5f;
 
-        if ((clientList.ContainsKey(p.networkIdentity) && p.networkIdentity != networkIdentity))// || desync)
-        {
+        if (((clientList.ContainsKey(p.networkIdentity) && p.networkIdentity != networkIdentity) || desync) && !entity.Teleporting)
             entity.NetworkCorrection.NewServerPosition(p.value);
-        }
     }
 
     private static void PlayerRotation(NetworkMessage netMsg)
@@ -285,8 +283,9 @@ public class ClientManager
 
         if (clientList.ContainsKey(p.networkIdentity))
         {
-            // maybe also disable network correction?!
-            clientList[p.networkIdentity].Entity.transform.position = p.value;
+            Survivor entity = (Survivor) clientList[p.networkIdentity].Entity;
+            entity.Teleporting = true;
+            entity.NetworkCorrection.NewServerPosition(p.value);
         }
     }
 }

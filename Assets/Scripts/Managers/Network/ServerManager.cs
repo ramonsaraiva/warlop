@@ -23,6 +23,9 @@ public enum PacketTypes : short
 	PlayerDamageWithForce,
 	PlayerEnteredSafeArea,
 	PlayerLeftSafeArea,
+
+    // spells
+    PlayerTeleport,
 }
 
 public class HandshakePacket : MessageBase
@@ -384,6 +387,11 @@ public class ServerManager
         ClientManager.Connect("127.0.0.1", port, nickname);
     }
 
+	public static bool IsServer()
+	{
+		return NetworkServer.active;
+	}
+
     public static void StartGame()
     {
 		if (!NetworkServer.active)
@@ -407,11 +415,6 @@ public class ServerManager
 		NetworkServer.SendByChannelToAll((short)PacketTypes.EndGame, new EmptyMessage(), Channels.DefaultReliable);
 	}
 	
-	public static bool IsServer()
-	{
-		return NetworkServer.active;
-	}
-
 	public static void ApplyDamage(Survivor from, Survivor to, float damage)
 	{
 		NetworkServer.SendByChannelToAll((short)PacketTypes.PlayerDamage, new DamagePacket(from.NetworkIdentity, to.NetworkIdentity, damage), Channels.DefaultReliable);
@@ -421,6 +424,14 @@ public class ServerManager
 	{
 		NetworkServer.SendByChannelToAll((short)PacketTypes.PlayerDamageWithForce, new DamageWithForcePacket(from.NetworkIdentity, to.NetworkIdentity, damage, force), Channels.DefaultReliable);
 	}
+
+    public static void Teleport(Survivor from, Vector3 position)
+    {
+        if (!from.Flying)
+        {
+            NetworkServer.SendByChannelToAll((short)PacketTypes.PlayerTeleport, new IdentifiedVector3Packet(from.NetworkIdentity, position), Channels.DefaultReliable);
+        }
+    }
 
     private static void RegisterHandlers()
     {
@@ -473,7 +484,7 @@ public class ServerManager
 		Vector3 serverPosition = ClientManager.ClientList[netMsg.conn.connectionId].Entity.transform.position;
 
 		float desyncDistance = Vector3.Distance(value, serverPosition);
-        if (desyncDistance > 1.5f)
+        if (desyncDistance > 1.0f)
             value = serverPosition;
 
         NetworkServer.SendByChannelToAll((short) PacketTypes.PlayerPosition, new IdentifiedVector3Packet(netMsg.conn.connectionId, value), Channels.DefaultUnreliable);

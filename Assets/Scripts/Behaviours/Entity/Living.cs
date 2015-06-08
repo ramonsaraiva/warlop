@@ -16,6 +16,9 @@ public class Living : Entity
 	private bool flying;
 	private bool channeling;
 
+    private float lastTeleport;
+    private bool teleporting;
+
 	#region Properties
 	public Rigidbody2D Rigidbody
 	{
@@ -57,6 +60,16 @@ public class Living : Entity
 		get { return channeling; }
 		set { channeling = value; }
 	}
+
+    public bool Teleporting
+    {
+        get { return teleporting; }
+        set
+        {
+            teleporting = true;
+            lastTeleport = Time.time;
+        }
+    }
 	#endregion Properties
 
 	public void UpdateDirection(Vector3 direction)
@@ -74,6 +87,9 @@ public class Living : Entity
 
 	protected virtual void Update()
 	{
+        // network hack? lol
+        if (teleporting && Time.time > lastTeleport + 1f)
+            teleporting = false;
 	}
 
 	protected virtual void FixedUpdate()
