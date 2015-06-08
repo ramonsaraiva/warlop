@@ -97,9 +97,16 @@ public class Living : Entity
 		if (channeling)
 			return;
 
-		if (flying)
-			rigidbody.AddForce(movementDirection * speed, ForceMode2D.Force);
-		else
-			rigidbody.velocity = movementDirection * speed;
+        if (flying)
+            rigidbody.AddForce(movementDirection * speed, ForceMode2D.Force);
+        else
+        {
+            //rigidbody.velocity = movementDirection * speed;
+            transform.position += movementDirection * speed * Time.deltaTime;
+            /*
+             * swap velocity to position?
+             * i don't lik the "slow movement" effect that velocity does
+             */
+        }
 	}
 }
